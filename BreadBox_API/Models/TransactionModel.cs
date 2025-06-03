@@ -1,6 +1,6 @@
 ﻿namespace BreadBox_API.Models
 {
-    public class Transaction
+    public class TransactionModel
     {
         public int Id { get; set; }
         public decimal Amount { get; set; }

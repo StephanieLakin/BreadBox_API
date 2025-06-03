@@ -4,6 +4,8 @@ using System.Reflection;
 using Microsoft.OpenApi.Models; 
 using Swashbuckle.AspNetCore.SwaggerGen; 
 using Swashbuckle.AspNetCore.SwaggerUI;
+using BreadBox_API.Services;
+using BreadBox_API.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -29,11 +31,16 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<BreadBoxDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//Add Swagger
+//Register Services
+builder.Services.AddScoped<IClientService, ClientService>();
+builder.Services.AddScoped<IUserService, UserService>();
+
+
+// Add Swagger
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new() { Title = "BreadBox API", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "BreadBox API", Version = "v1" });
 });
 
 var app = builder.Build();
@@ -43,7 +50,7 @@ app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
     c.SwaggerEndpoint("/swagger/v1/swagger.json", "BreadBox API v1");
-    c.RoutePrefix = string.Empty; // Makes Swagger UI available at the root URL (e.g., http://localhost:5000/)
+    c.RoutePrefix = string.Empty; // Swagger UI at the root (e.g., https://localhost:44394/)
 });
 app.UseCors("AllowFrontend");
 app.UseAuthorization();
