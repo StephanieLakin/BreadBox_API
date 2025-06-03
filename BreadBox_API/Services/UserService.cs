@@ -32,7 +32,7 @@ namespace BreadBox_API.Services
                 }).ToListAsync();
         }
 
-        public async Task<UserModel> GetByIdAsync(int id)
+        public async Task<UserModel> GetUserByIdAsync(int id)
         {
             var user = await _context.Users
                 .Where (u => u.Id == id)
@@ -88,7 +88,7 @@ namespace BreadBox_API.Services
 
 
 
-        public Task<UserModel> UpdateUserAsync(UserCreateModel userCreateModel)
+        public Task<UserModel> UpdateUserAsync(int id, UserCreateModel userCreateModel)
         {
             throw new NotImplementedException();
         }
