@@ -34,7 +34,7 @@ builder.Services.AddDbContext<BreadBoxDbContext>(options =>
 //Register Services
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IUserService, UserService>();
-
+builder.Services.AddScoped<IInvoiceService, InvoiceService>();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();
