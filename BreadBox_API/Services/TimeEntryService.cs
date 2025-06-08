@@ -2,6 +2,7 @@
 using BreadBox_API.Entities;
 using BreadBox_API.Models;
 using BreadBox_API.Services.Interfaces;
+using BreadBox_API.Validators;
 using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
@@ -27,8 +28,10 @@ namespace BreadBox_API.Services
                     ClientId = te.ClientId,
                     StartTime = te.StartTime,
                     EndTime = te.EndTime,
-                    Description = te.Description,
                     HoursWorked = te.HoursWorked,
+                    Description = te.Description,
+                    Rate = te.Rate,
+                    CreatedAt = te.CreatedAt,
                     UserId = te.UserId
                 }
                 ).ToListAsync();
@@ -43,7 +46,10 @@ namespace BreadBox_API.Services
                     ClientId = te.ClientId,
                     StartTime = te.StartTime,
                     EndTime = te.EndTime,
+                    HoursWorked = te.HoursWorked,
                     Description = te.Description,
+                    Rate = te.Rate,
+                    CreatedAt = te.CreatedAt,
                     UserId = te.UserId
                 })
                 .FirstOrDefaultAsync();
@@ -66,12 +72,19 @@ namespace BreadBox_API.Services
             if (timeEntryCreateModel.StartTime >= timeEntryCreateModel.EndTime)
                 throw new ArgumentException("StartTime must be earlier than EndTime.");
 
+            double hoursWorked = timeEntryCreateModel.EndTime.HasValue
+                            ? (timeEntryCreateModel.EndTime.Value.ToUniversalTime() - timeEntryCreateModel.StartTime.ToUniversalTime()).TotalHours
+                            : timeEntryCreateModel.HoursWorked;
+
             var timeEntry = new TimeEntry
             {
                 ClientId = timeEntryCreateModel.ClientId,
-                StartTime = timeEntryCreateModel.StartTime,
-                EndTime = timeEntryCreateModel.EndTime,
+                StartTime = timeEntryCreateModel.StartTime.ToUniversalTime(),
+                EndTime = timeEntryCreateModel.EndTime?.ToUniversalTime(),
+                HoursWorked = hoursWorked,
                 Description = timeEntryCreateModel.Description,
+                Rate = timeEntryCreateModel.Rate,
+                CreatedAt = DateTime.UtcNow,
                 UserId = timeEntryCreateModel.UserId
             };
 
@@ -84,7 +97,10 @@ namespace BreadBox_API.Services
                 ClientId = timeEntry.ClientId,
                 StartTime = timeEntry.StartTime,
                 EndTime = timeEntry.EndTime,
+                HoursWorked = timeEntry.HoursWorked,
                 Description = timeEntry.Description,
+                Rate = timeEntry.Rate,
+                CreatedAt = timeEntry.CreatedAt,
                 UserId = timeEntry.UserId
             };
         }

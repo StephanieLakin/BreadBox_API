@@ -72,6 +72,18 @@ namespace BreadBox_API.Data
             modelBuilder.Entity<Transaction>()
                 .Property(t => t.Amount)
                 .HasPrecision(18, 2);
+
+            modelBuilder.Entity<TimeEntry>(entity =>
+            {
+                entity.Property(e => e.Rate)
+                    .HasColumnType("decimal(10,2)")
+                    .HasDefaultValue(0m)
+                    .IsRequired();
+                entity.Property(e => e.CreatedAt)
+                    .HasDefaultValueSql("GETUTCDATE()"); // sets default to current UTC time
+            });
         }
+
     }
+
 }

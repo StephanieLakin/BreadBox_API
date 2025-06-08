@@ -7,7 +7,7 @@ namespace BreadBox_API.Entities
     {
         [Key]
         public int Id { get; set; }
-
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }

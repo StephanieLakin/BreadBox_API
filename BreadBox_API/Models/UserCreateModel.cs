@@ -3,7 +3,7 @@
     public class UserCreateModel
     {
         public string EmailAddress { get; set; }
-        public string Password { get; set; } // Will hash this in the service
+        public string Password { get; set; } // Plain-text password to be hashed
         public string FirstName { get; set; }
         public string LastName { get; set; }
         public string SubscriptionPlan { get; set; }

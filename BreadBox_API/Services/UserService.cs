@@ -72,7 +72,7 @@ namespace BreadBox_API.Services
             var user = new User
             {
                 EmailAddress = userCreateModel.EmailAddress,
-                PasswordHash = HashPassword(userCreateModel.Password), 
+                PasswordHash = HashPassword(userCreateModel.Password),
                 FirstName = userCreateModel.FirstName,
                 LastName = userCreateModel.LastName,
                 SubscriptionPlan = userCreateModel.SubscriptionPlan,
@@ -87,6 +87,7 @@ namespace BreadBox_API.Services
             return new UserModel
             {
                 Id = user.Id,
+                PasswordHash = user.PasswordHash,
                 EmailAddress = user.EmailAddress,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
@@ -119,7 +120,7 @@ namespace BreadBox_API.Services
             }
 
             user.EmailAddress = userCreateModel.EmailAddress;
-            user.PasswordHash = HashPassword(userCreateModel.Password);
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(userCreateModel.Password);
             user.FirstName = userCreateModel.FirstName;
             user.LastName = userCreateModel.LastName;
             user.SubscriptionPlan = userCreateModel.SubscriptionPlan;
@@ -130,6 +131,7 @@ namespace BreadBox_API.Services
             return new UserModel
             {
                 Id = user.Id,
+                PasswordHash = user.PasswordHash,
                 EmailAddress = user.EmailAddress,
                 FirstName = user.FirstName,
                 LastName = user.LastName,
@@ -165,7 +167,7 @@ namespace BreadBox_API.Services
 
         public bool VerifyPassword(string password, string passwordHash)
         {
-            if (!string.IsNullOrEmpty(password) || string.IsNullOrEmpty(passwordHash))
+            if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(passwordHash))
             {
                 return false;
             }
