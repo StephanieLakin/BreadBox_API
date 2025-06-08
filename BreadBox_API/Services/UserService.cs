@@ -4,6 +4,7 @@ using BreadBox_API.Models;
 using BreadBox_API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using BCrypt.Net;
+using FluentValidation;
 
 namespace BreadBox_API.Services
 {
@@ -11,10 +12,13 @@ namespace BreadBox_API.Services
     {
 
         private readonly BreadBoxDbContext _context;
+        private readonly IValidator<UserCreateModel> _userCreateValidator;
+        
 
-        public UserService(BreadBoxDbContext context)
+        public UserService(BreadBoxDbContext context, IValidator<UserCreateModel> userCreateValidator)
         {
             _context = context;
+            _userCreateValidator = userCreateValidator;
         }
 
         public async Task<List<UserModel>> GetAllUsersAsync()
@@ -54,6 +58,12 @@ namespace BreadBox_API.Services
 
         public async Task<UserModel> CreateUserAsync(int id, UserCreateModel userCreateModel)
         {
+
+            var validationResult = await _userCreateValidator.ValidateAsync(userCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
             // Basic validation: Check if email is unique
             if (await _context.Users.AnyAsync(u => u.EmailAddress == userCreateModel.EmailAddress && u.Id != id))
             {
@@ -62,7 +72,7 @@ namespace BreadBox_API.Services
             var user = new User
             {
                 EmailAddress = userCreateModel.EmailAddress,
-                PasswordHash = HashPassword(userCreateModel.Password), // Placeholder for hashing
+                PasswordHash = HashPassword(userCreateModel.Password), 
                 FirstName = userCreateModel.FirstName,
                 LastName = userCreateModel.LastName,
                 SubscriptionPlan = userCreateModel.SubscriptionPlan,
@@ -89,15 +99,60 @@ namespace BreadBox_API.Services
 
 
 
-        public Task<UserModel> UpdateUserAsync(int id, UserCreateModel userCreateModel)
+        public async Task<UserModel> UpdateUserAsync(int id, UserCreateModel userCreateModel)
         {
-            throw new NotImplementedException();
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return null;
+            }
+
+            var validationResult = await _userCreateValidator.ValidateAsync(userCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
+            if (await _context.Users.AnyAsync(u => u.EmailAddress == userCreateModel.EmailAddress && u.Id != id))
+            {
+                throw new ArgumentException("Email address is already in use by another user.");
+            }
+
+            user.EmailAddress = userCreateModel.EmailAddress;
+            user.PasswordHash = HashPassword(userCreateModel.Password);
+            user.FirstName = userCreateModel.FirstName;
+            user.LastName = userCreateModel.LastName;
+            user.SubscriptionPlan = userCreateModel.SubscriptionPlan;
+            user.StripeCustomerId = userCreateModel.StripeCustomerId;
+
+            await _context.SaveChangesAsync();
+
+            return new UserModel
+            {
+                Id = user.Id,
+                EmailAddress = user.EmailAddress,
+                FirstName = user.FirstName,
+                LastName = user.LastName,
+                SubscriptionPlan = user.SubscriptionPlan,
+                SubscriptionStartDate = user.SubscriptionStartDate,
+                SubscriptionEndDate = user.SubscriptionEndDate,
+                StripeCustomerId = user.StripeCustomerId
+            };
         }
 
-        public Task<bool> DeleteUserAsync(int id)
+        public async Task<bool> DeleteUserAsync(int id)
         {
-            throw new NotImplementedException();
+            var user = await _context.Users.FindAsync(id);
+            if (user == null)
+            {
+                return false;
+            }
+
+            _context.Users.Remove(user);
+            await _context.SaveChangesAsync();
+            return true;
         }
+
 
         private string HashPassword(string password)
         {

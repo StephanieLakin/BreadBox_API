@@ -13,6 +13,7 @@ namespace BreadBox_API.Entities
         public DateTime? EndTime { get; set; }
         public double HoursWorked { get; set; }
         public string Description { get; set; }
+        public decimal Rate { get; set; }
 
         [ForeignKey("Client")]
         public int ClientId { get; set; }

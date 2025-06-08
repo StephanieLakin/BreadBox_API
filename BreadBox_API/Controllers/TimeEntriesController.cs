@@ -1,6 +1,7 @@
 ﻿using BreadBox_API.Models;
 using BreadBox_API.Services;
 using BreadBox_API.Services.Interfaces;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BreadBox_API.Controllers
@@ -43,6 +44,10 @@ namespace BreadBox_API.Controllers
                 var createdTimeEntry = await _timeEntryService.CreateTimeEntryAsync(timeEntryCreateModel);
                 return CreatedAtAction(nameof(GetTimeEntry), new { id = createdTimeEntry.Id }, createdTimeEntry);
             }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
+            }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
@@ -59,6 +64,10 @@ namespace BreadBox_API.Controllers
                 if (updatedTimeEntry == null)
                     return NotFound();
                 return Ok(updatedTimeEntry);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
             catch (ArgumentException ex)
             {

@@ -1,6 +1,7 @@
 ﻿using BreadBox_API.Models;
 using BreadBox_API.Services;
 using BreadBox_API.Services.Interfaces;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
@@ -44,12 +45,15 @@ namespace BreadBox_API.Controllers
             try
             {
                 var createdClient = await _clientService.CreateClientAsync(clientCreateModel);
-                return CreatedAtAction(nameof(GetClient), new { id = createdClient.Id }, createdClient );
+                return CreatedAtAction(nameof(GetClient), new { id = createdClient.Id }, createdClient);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
             catch (ArgumentException ex)
             {
-
-                return BadRequest(ex.Message);
+                return BadRequest(new { Error = ex.Message });
             }
         }
 
@@ -65,6 +69,10 @@ namespace BreadBox_API.Controllers
                     return NotFound();  
                 }
                 return Ok(updateClient);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
             catch (ArgumentException ex)
             {

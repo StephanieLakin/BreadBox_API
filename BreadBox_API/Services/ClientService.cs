@@ -3,16 +3,20 @@ using BreadBox_API.Entities;
 using BreadBox_API.Models;
 using BreadBox_API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 
 namespace BreadBox_API.Services
 {  
     public class ClientService : IClientService
     {
-        private readonly BreadBoxDbContext _context;
 
-        public ClientService(BreadBoxDbContext context)
+        private readonly BreadBoxDbContext _context;
+        private readonly IValidator<ClientCreateModel> _clientCreateValidator;
+
+        public ClientService(BreadBoxDbContext context, IValidator<ClientCreateModel> clientCreateValidator)
         {
             _context = context;
+            _clientCreateValidator = clientCreateValidator;
         }
 
         public async Task<List<ClientModel>> GetAllClientsAsync()
@@ -52,7 +56,12 @@ namespace BreadBox_API.Services
 
         public async Task<ClientModel> CreateClientAsync(ClientCreateModel clientCreateModel)
         {
-            // Validate UserId exists
+            var validationResult = await _clientCreateValidator.ValidateAsync(clientCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
             var userExists = await _context.Users.AnyAsync(u => u.Id == clientCreateModel.UserId);
             if (!userExists)
             {
@@ -90,6 +99,12 @@ namespace BreadBox_API.Services
             if (client == null)
             {
                 return null;
+            }
+
+            var validationResult = await _clientCreateValidator.ValidateAsync(clientCreateModel);
+            if (validationResult != null)
+            {
+                throw new ValidationException(validationResult.Errors);
             }
 
             // Validate UserId exists

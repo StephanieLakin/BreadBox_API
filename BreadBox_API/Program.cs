@@ -6,6 +6,9 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using BreadBox_API.Services;
 using BreadBox_API.Services.Interfaces;
+using BreadBox_API.Models;
+using FluentValidation;
+using BreadBox_API.Validators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,10 +34,17 @@ builder.Services.AddCors(options =>
 builder.Services.AddDbContext<BreadBoxDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-//Register Services
+// Register Validators
+builder.Services.AddScoped<IValidator<ClientCreateModel>, ClientCreateValidator>();
+builder.Services.AddScoped<IValidator<UserCreateModel>, UserCreateValidator>();
+builder.Services.AddScoped<IValidator<InvoiceCreateModel>, InvoiceCreateValidator>();
+builder.Services.AddScoped<IValidator<TimeEntryCreateModel>, TimeEntryCreateValidator>();
+
+// Register Services
 builder.Services.AddScoped<IClientService, ClientService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IInvoiceService, InvoiceService>();
+builder.Services.AddScoped<ITimeEntryService, TimeEntryService>();
 
 // Add Swagger
 builder.Services.AddEndpointsApiExplorer();

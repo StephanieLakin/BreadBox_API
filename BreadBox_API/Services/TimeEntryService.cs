@@ -1,17 +1,21 @@
 ﻿using BreadBox_API.Data;
 using BreadBox_API.Entities;
 using BreadBox_API.Models;
+using BreadBox_API.Services.Interfaces;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
 
 namespace BreadBox_API.Services
 {
-    public class TimeEntryService
+    public class TimeEntryService : ITimeEntryService
     {
         private readonly BreadBoxDbContext _context;
+        private readonly IValidator<TimeEntryCreateModel> _timeEntryCreateValidator;
 
-        public TimeEntryService(BreadBoxDbContext context)
+        public TimeEntryService(BreadBoxDbContext context, IValidator<TimeEntryCreateModel> timeEntryValidator)
         {
             _context = context;
+            _timeEntryCreateValidator = timeEntryValidator;
         }
 
         public async Task<List<TimeEntryModel>> GetAllTimeEntriesAsync()
@@ -47,6 +51,11 @@ namespace BreadBox_API.Services
 
         public async Task<TimeEntryModel> CreateTimeEntryAsync(TimeEntryCreateModel timeEntryCreateModel)
         {
+            var validationResult = await _timeEntryCreateValidator.ValidateAsync(timeEntryCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
             // Validate UserId and ClientId
             if (!await _context.Users.AnyAsync(u => u.Id == timeEntryCreateModel.UserId))
                 throw new ArgumentException("Invalid UserId: User does not exist.");
@@ -82,6 +91,13 @@ namespace BreadBox_API.Services
 
         public async Task<TimeEntryModel> UpdateTimeEntryAsync(int id, TimeEntryCreateModel timeEntryCreateModel)
         {
+
+            var validationResult = await _timeEntryCreateValidator.ValidateAsync(timeEntryCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
             var timeEntry = await _context.TimeEntries.FindAsync(id);
             if (timeEntry == null)
                 return null;
@@ -92,7 +108,7 @@ namespace BreadBox_API.Services
             if (!await _context.Clients.AnyAsync(c => c.Id == timeEntryCreateModel.ClientId))
                 throw new ArgumentException("Invalid ClientId: Client does not exist.");
 
-            // Validate StartTime < EndTime
+            // Validate StartTime < EndTime (already handled by validator, but kept for clarity)
             if (timeEntryCreateModel.StartTime >= timeEntryCreateModel.EndTime)
                 throw new ArgumentException("StartTime must be earlier than EndTime.");
 

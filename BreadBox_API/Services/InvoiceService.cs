@@ -2,17 +2,22 @@
 using BreadBox_API.Entities;
 using BreadBox_API.Models;
 using BreadBox_API.Services.Interfaces;
+using FluentValidation;
 using Microsoft.EntityFrameworkCore;
+using FluentValidation;
 
 namespace BreadBox_API.Services
 {
     public class InvoiceService : IInvoiceService
     {
         private readonly BreadBoxDbContext _context;
+        private readonly IValidator<InvoiceCreateModel> _invoiceCreateValidator;
 
-        public InvoiceService(BreadBoxDbContext context)
+        public InvoiceService(BreadBoxDbContext context, IValidator<InvoiceCreateModel> invoiceCreateValidator)
         {
             _context = context;
+            _invoiceCreateValidator = invoiceCreateValidator;
+
         }
 
         public async Task<List<InvoiceModel>> GetAllInvoicesAsync()
@@ -50,6 +55,12 @@ namespace BreadBox_API.Services
 
         public async Task<InvoiceModel> CreateInvoiceAsync(InvoiceCreateModel invoiceCreateModel)
         {
+            var validationResult = await _invoiceCreateValidator.ValidateAsync(invoiceCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+            // Validate UserId and ClientId
             if (!await _context.Users.AnyAsync(u => u.Id == invoiceCreateModel.UserId))
                 throw new ArgumentException("Invalid UserId: User does not exist.");
             if (!await _context.Clients.AnyAsync(c => c.Id == invoiceCreateModel.ClientId))
@@ -82,6 +93,13 @@ namespace BreadBox_API.Services
 
         public async Task<InvoiceModel> UpdateInvoiceAsync(int id, InvoiceCreateModel invoiceCreateModel)
         {
+            var validationResult = await _invoiceCreateValidator.ValidateAsync(invoiceCreateModel);
+            if (!validationResult.IsValid)
+            {
+                throw new ValidationException(validationResult.Errors);
+            }
+
+            // Validate UserId and ClientId
             var invoice = await _context.Invoices.FindAsync(id);
             if (invoice == null)
                 return null;

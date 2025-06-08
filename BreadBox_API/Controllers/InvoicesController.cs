@@ -1,6 +1,7 @@
 ﻿using BreadBox_API.Models;
 using BreadBox_API.Services;
 using BreadBox_API.Services.Interfaces;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 
 namespace BreadBox_API.Controllers
@@ -43,6 +44,10 @@ namespace BreadBox_API.Controllers
                 var createdInvoice = await _invoiceService.CreateInvoiceAsync(invoiceCreateModel);
                 return CreatedAtAction(nameof(GetInvoice), new { id = createdInvoice.Id }, createdInvoice);
             }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
+            }
             catch (ArgumentException ex)
             {
                 return BadRequest(ex.Message);
@@ -59,6 +64,10 @@ namespace BreadBox_API.Controllers
                 if (updatedInvoice == null)
                     return NotFound();
                 return Ok(updatedInvoice);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
             catch (ArgumentException ex)
             {

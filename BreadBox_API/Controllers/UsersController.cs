@@ -1,6 +1,7 @@
 ﻿using BreadBox_API.Models;
 using BreadBox_API.Services;
 using BreadBox_API.Services.Interfaces;
+using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
 using System;
 
@@ -46,6 +47,10 @@ namespace BreadBox_API.Controllers
                 var createdUser = await _userService.CreateUserAsync(id, userCreateModel);
                 return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
             }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
+            }
             catch (ArgumentException ex)
             {
 
@@ -65,6 +70,10 @@ namespace BreadBox_API.Controllers
                     return NotFound();
                 }
                 return Ok(updateUser);
+            }
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { Errors = ex.Errors.Select(e => e.ErrorMessage) });
             }
             catch (ArgumentException ex)
             {
