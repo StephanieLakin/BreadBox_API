@@ -39,11 +39,11 @@ namespace BreadBox_API.Controllers
 
         // POST: api/users
         [HttpPost]
-        public async Task<ActionResult<UserModel>> CreateUser(UserCreateModel userCreateModel)
+        public async Task<ActionResult<UserModel>> CreateUser(int id, UserCreateModel userCreateModel)
         {
             try
             {
-                var createdUser = await _userService.CreateUserAsync(userCreateModel);
+                var createdUser = await _userService.CreateUserAsync(id, userCreateModel);
                 return CreatedAtAction(nameof(GetUser), new { id = createdUser.Id }, createdUser);
             }
             catch (ArgumentException ex)

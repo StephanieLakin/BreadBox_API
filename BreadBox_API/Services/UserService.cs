@@ -3,6 +3,7 @@ using BreadBox_API.Entities;
 using BreadBox_API.Models;
 using BreadBox_API.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using BCrypt.Net;
 
 namespace BreadBox_API.Services
 {
@@ -19,7 +20,7 @@ namespace BreadBox_API.Services
         public async Task<List<UserModel>> GetAllUsersAsync()
         {
             return await _context.Users
-                .Select (u => new UserModel
+                .Select(u => new UserModel
                 {
                     Id = u.Id,
                     EmailAddress = u.EmailAddress,
@@ -35,8 +36,8 @@ namespace BreadBox_API.Services
         public async Task<UserModel> GetUserByIdAsync(int id)
         {
             var user = await _context.Users
-                .Where (u => u.Id == id)
-                .Select (u => new UserModel
+                .Where(u => u.Id == id)
+                .Select(u => new UserModel
                 {
                     Id = u.Id,
                     EmailAddress = u.EmailAddress,
@@ -51,10 +52,10 @@ namespace BreadBox_API.Services
             return user;
         }
 
-        public async Task<UserModel> CreateUserAsync(UserCreateModel userCreateModel)
+        public async Task<UserModel> CreateUserAsync(int id, UserCreateModel userCreateModel)
         {
             // Basic validation: Check if email is unique
-            if (await _context.Users.AnyAsync(u => u.EmailAddress == userCreateModel.EmailAddress))
+            if (await _context.Users.AnyAsync(u => u.EmailAddress == userCreateModel.EmailAddress && u.Id != id))
             {
                 throw new ArgumentException("Email address is already in use.");
             }
@@ -100,8 +101,21 @@ namespace BreadBox_API.Services
 
         private string HashPassword(string password)
         {
-            // Placeholder: In completed app, will use a proper hashing library like BCrypt
-            return password + "_hashed"; // Temporary implementation
+            if (string.IsNullOrEmpty(password))
+            {
+                throw new ArgumentException("Password cannot be null or empty.");
+            }
+            return BCrypt.Net.BCrypt.HashPassword(password);
+        }
+
+        public bool VerifyPassword(string password, string passwordHash)
+        {
+            if (!string.IsNullOrEmpty(password) || string.IsNullOrEmpty(passwordHash))
+            {
+                return false;
+            }
+
+            return BCrypt.Net.BCrypt.Verify(password, passwordHash);
         }
     }
 }

@@ -30,14 +30,5 @@ namespace BreadBox_API.Entities
         public ICollection<Transaction> Transactions { get; set; }
         public ICollection<Invoice> Invoices { get; set; }
         public ICollection<TimeEntry> TimeEntries { get; set; }
-
-
-
-
-
-
-
-
-
     }
 }
